@@ -29,23 +29,56 @@ st.markdown(
 # FIT ANALYTICS
 # --------------------------------------------------
 
+# --------------------------------------------------
+# FIT ANALYTICS
+# --------------------------------------------------
+
 fit_sales = (
-    df.groupby("FIT")["NET SALE VALUE"]
-    .sum()
-    .reset_index()
-    .sort_values(
-        "NET SALE VALUE",
-        ascending=False
+    df.groupby(["MAIN CATEGORY", "FIT"])
+    .agg(
+        revenue=("NET SALE VALUE", "sum"),
+        units=("QTY SALE", "sum")
     )
+    .reset_index()
+)
+
+fit_sales["fit_category"] = (
+    fit_sales["FIT"].astype(str)
+    + " ("
+    + fit_sales["MAIN CATEGORY"].astype(str)
+    + ")"
+)
+
+fit_sales = fit_sales.sort_values(
+    "revenue",
+    ascending=False
+).head(15)
+
+import plotly.graph_objects as go
+
+fig = go.Figure()
+
+fig.add_bar(
+    x=fit_sales["fit_category"],
+    y=fit_sales["revenue"],
+    customdata=fit_sales[["units"]],
+    hovertemplate=
+        "<b>%{x}</b><br>"
+        "Revenue: ₹%{y:,.0f}<br>"
+        "Units Sold: %{customdata[0]:,.0f}"
+        "<extra></extra>",
+    name="Revenue"
+)
+
+fig.update_layout(
+    title="Fit Performance by Category",
+    xaxis_title="Fit (Category)",
+    yaxis_title="Revenue (₹)",
+    showlegend=False
 )
 
 st.plotly_chart(
-    bar_chart(
-        fit_sales.head(10),
-        "FIT",
-        "NET SALE VALUE",
-        title="Revenue by Fit"
-    ),
+    fig,
     use_container_width=True
 )
 

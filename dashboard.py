@@ -33,14 +33,16 @@ inject_global_css()
 # LOAD DATA
 # --------------------------------------------------
 
-df = load_data()
+df_new = load_data()
 
-if df is None:
+if df_new is not None:
+    st.session_state["df"] = df_new
+
+if "df" not in st.session_state:
     st.info("Upload a sales dataset to begin.")
     st.stop()
 
-st.session_state["df"] = df
-
+df = st.session_state["df"]
 
 # --------------------------------------------------
 # SIDEBAR
@@ -53,6 +55,23 @@ render_sidebar()
 # --------------------------------------------------
 
 df = sidebar_filters(df)
+if "BRAND_GROUP" in df.columns:
+
+    selected_brand = st.sidebar.selectbox(
+        "Brand",
+        [
+            "All Brands",
+            "Killer",
+            "JR Killer",
+            "Pepe"
+        ]
+    )
+
+    if selected_brand != "All Brands":
+
+        df = df[
+            df["BRAND_GROUP"] == selected_brand
+        ]
 col_logo, col_title = st.columns([1, 8])
 
 
