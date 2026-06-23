@@ -1,5 +1,5 @@
 import streamlit as st
-
+from auth import require_login
 from data_loader import load_data
 
 from components.sidebar import (
@@ -10,6 +10,7 @@ from components.sidebar import (
 from components.filters import sidebar_filters
 from components.kpi_cards import render_kpi_row
 from components.charts import bar_chart, area_line
+
 
 
 # --------------------------------------------------
@@ -28,6 +29,7 @@ st.set_page_config(
 # --------------------------------------------------
 
 inject_global_css()
+require_login()
 
 # --------------------------------------------------
 # LOAD DATA
@@ -213,3 +215,5 @@ with col2:
         ),
         use_container_width=True
     )
+
+    st.write("Rows loaded into dashboard:", len(df))

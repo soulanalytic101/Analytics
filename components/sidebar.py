@@ -308,9 +308,7 @@ def inject_global_css():
 
 # ── Sidebar renderer ──────────────────────────────────────────────────────────
 NAV_ITEMS = [
-    ("OVERVIEW", [
-        ("◈", "Executive Dashboard", "pages/1_Executive_Dashboard"),
-    ]),
+    
     ("INTELLIGENCE", [
         ("▤", "Store Intelligence",   "pages/2_Store_Intelligence"),
         ("◑", "Product Intelligence", "pages/3_Product_Intelligence"),

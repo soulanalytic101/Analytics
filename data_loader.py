@@ -1,6 +1,11 @@
 import pandas as pd
 import streamlit as st
 
+from db import (
+    load_brand_data,
+    upload_and_append
+)
+
 
 @st.cache_data(show_spinner=True)
 def process_data(df):
@@ -39,7 +44,12 @@ def process_data(df):
             )
 
     if "INVOICE DATE" in df.columns:
-        df["_YEAR"] = df["INVOICE DATE"].dt.year
+
+        df["_YEAR"] = (
+            df["INVOICE DATE"]
+            .dt.year
+        )
+
         df["_MONTH"] = (
             df["INVOICE DATE"]
             .dt.to_period("M")
@@ -51,72 +61,153 @@ def process_data(df):
 
 def load_data():
 
-    st.subheader("Upload Brand Files")
+    st.subheader("Brand Data Management")
 
-    killer_files = st.file_uploader(
-        "Killer",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        key="killer"
+    with st.expander(
+        "Upload Brand Files",
+        expanded=True
+    ):
+
+        col1, col2, col3 = st.columns(3)
+
+        # -----------------------------
+        # KILLER
+        # -----------------------------
+
+        with col1:
+
+            killer_files = st.file_uploader(
+                "Killer",
+                type=["xlsx"],
+                accept_multiple_files=True,
+                key="killer_upload"
+            )
+
+            if killer_files:
+
+                for file in killer_files:
+
+                    temp_df = pd.read_excel(
+                        file,
+                        engine="openpyxl"
+                    )
+
+                    temp_df = process_data(
+                        temp_df
+                    )
+
+                    stats = upload_and_append(
+                        temp_df,
+                        "Killer"
+                    )
+
+                    st.success(
+                        f"{file.name}: "
+                        f"{stats['inserted']} inserted, "
+                        f"{stats['skipped']} skipped"
+                    )
+
+        # -----------------------------
+        # JR KILLER
+        # -----------------------------
+
+        with col2:
+
+            jrkiller_files = st.file_uploader(
+                "JR Killer",
+                type=["xlsx"],
+                accept_multiple_files=True,
+                key="jrkiller_upload"
+            )
+
+            if jrkiller_files:
+
+                for file in jrkiller_files:
+
+                    temp_df = pd.read_excel(
+                        file,
+                        engine="openpyxl"
+                    )
+
+                    temp_df = process_data(
+                        temp_df
+                    )
+
+                    stats = upload_and_append(
+                        temp_df,
+                        "JR Killer"
+                    )
+
+                    st.success(
+                        f"{file.name}: "
+                        f"{stats['inserted']} inserted, "
+                        f"{stats['skipped']} skipped"
+                    )
+
+        # -----------------------------
+        # PEPE
+        # -----------------------------
+
+        with col3:
+
+            pepe_files = st.file_uploader(
+                "Pepe",
+                type=["xlsx"],
+                accept_multiple_files=True,
+                key="pepe_upload"
+            )
+
+            if pepe_files:
+
+                for file in pepe_files:
+
+                    temp_df = pd.read_excel(
+                        file,
+                        engine="openpyxl"
+                    )
+
+                    temp_df = process_data(
+                        temp_df
+                    )
+
+                    stats = upload_and_append(
+                        temp_df,
+                        "Pepe"
+                    )
+
+                    st.success(
+                        f"{file.name}: "
+                        f"{stats['inserted']} inserted, "
+                        f"{stats['skipped']} skipped"
+                    )
+
+    # ---------------------------------
+    # BRAND SELECTOR FOR ANALYTICS
+    # ---------------------------------
+
+    selected_brand = st.sidebar.selectbox(
+        "Brand",
+        [
+            "Killer",
+            "JR Killer",
+            "Pepe"
+        ]
     )
 
-    jrkiller_files = st.file_uploader(
-        "JR Killer",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        key="jrkiller"
+    df = load_brand_data(
+        selected_brand
     )
 
-    pepe_files = st.file_uploader(
-        "Pepe",
-        type=["xlsx"],
-        accept_multiple_files=True,
-        key="pepe"
-    )
+    if df.empty:
 
-    dfs = []
+        st.warning(
+            f"No data available for {selected_brand}"
+        )
 
-    brand_uploads = [
-        ("Killer", killer_files),
-        ("JR Killer", jrkiller_files),
-        ("Pepe", pepe_files)
-    ]
-
-    with st.spinner("Loading datasets..."):
-
-        for brand_name, files in brand_uploads:
-
-            if not files:
-                continue
-
-            for file in files:
-
-                temp_df = pd.read_excel(
-                    file,
-                    engine="openpyxl"
-                )
-
-                temp_df["BRAND_GROUP"] = brand_name
-
-                dfs.append(temp_df)
-
-    if not dfs:
         return None
 
-    df = pd.concat(
-        dfs,
-        ignore_index=True
+    st.sidebar.success(
+        f"Viewing: {selected_brand}"
     )
-
-    st.sidebar.markdown("### Loaded Files")
-
-    for brand_name, files in brand_uploads:
-
-        if files:
-
-            st.sidebar.markdown(f"**{brand_name}**")
-
-            for file in files:
-                st.sidebar.write(f"• {file.name}")
 
     return process_data(df)
