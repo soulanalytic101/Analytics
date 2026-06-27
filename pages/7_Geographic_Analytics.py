@@ -15,9 +15,12 @@ from components.charts import (
     bar_chart
 )
 
-df = require_data()
+from db import load_monthly_sales
 
-if df is None:
+selected_brand = st.session_state.get("selected_brand", "Killer")
+df = load_monthly_sales(selected_brand)
+
+if df is None or df.empty:
     st.stop()
 
 df = sidebar_filters(

@@ -8,9 +8,16 @@ from analytics.product import (
 from components.filters import require_data, sidebar_filters
 from components.charts import bar_chart
 
-df = require_data()
+from db import load_granular_data
 
-if df is None:
+selected_brand = st.session_state.get("selected_brand", "Killer")
+cols = [
+    "MAIN CATEGORY", "CATEGORY", "FIT", "PRINT TYPE", "ITEM NAME", 
+    "NET SALE VALUE", "QTY SALE", "MRP", "STORE CODE", "BRAND", "SEASON"
+]
+df = load_granular_data(selected_brand, cols)
+
+if df is None or df.empty:
     st.stop()
 
 df = sidebar_filters(
@@ -144,23 +151,27 @@ display_df.columns = [
 
 display_df["Revenue (₹)"] = (
     display_df["Revenue (₹)"]
+    .fillna(0)
     .round()
     .astype(int)
 )
 
 display_df["Units Sold"] = (
     display_df["Units Sold"]
+    .fillna(0)
     .round()
     .astype(int)
 )
 
 display_df["Stores Selling"] = (
     display_df["Stores Selling"]
+    .fillna(0)
     .astype(int)
 )
 
 display_df["Average MRP (₹)"] = (
     display_df["Average MRP (₹)"]
+    .fillna(0)
     .round()
     .astype(int)
 )

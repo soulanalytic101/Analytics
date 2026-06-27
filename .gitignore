@@ -1,9 +1,12 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 
 data/
 *.csv
 *.xlsx
+*.xlsb
 
 .env
+node_modules/

@@ -16,9 +16,13 @@ from components.charts import (
     heatmap
 )
 
-df = require_data()
+from db import load_granular_data
 
-if df is None:
+selected_brand = st.session_state.get("selected_brand", "Killer")
+cols = ["SIZE", "CATEGORY", "NET SALE VALUE", "QTY SALE", "CLSNG QTY"]
+df = load_granular_data(selected_brand, cols)
+
+if df is None or df.empty:
     st.stop()
 
 df = sidebar_filters(

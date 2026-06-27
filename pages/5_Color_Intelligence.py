@@ -15,9 +15,13 @@ from components.charts import (
     bar_chart
 )
 
-df = require_data()
+from db import load_granular_data
 
-if df is None:
+selected_brand = st.session_state.get("selected_brand", "Killer")
+cols = ["SHADE", "STATE", "NET SALE VALUE", "QTY SALE", "CLSNG QTY", "MAIN CATEGORY", "CATEGORY"]
+df = load_granular_data(selected_brand, cols)
+
+if df is None or df.empty:
     st.stop()
 
 df = sidebar_filters(

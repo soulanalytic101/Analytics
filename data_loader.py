@@ -3,12 +3,17 @@ import streamlit as st
 
 from db import (
     load_brand_data,
-    upload_and_append
+    upload_and_append,
+    load_monthly_sales
 )
 
 
 @st.cache_data(show_spinner=True)
 def process_data(df):
+    if df is None or df.empty:
+        return df
+
+    df = df.copy()
 
     df.columns = (
         df.columns
@@ -56,7 +61,24 @@ def process_data(df):
             .astype(str)
         )
 
+    # Downcast numerics to save memory
+    for col in df.select_dtypes(include=["float"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="float")
+    for col in df.select_dtypes(include=["integer"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="integer")
+
+    # Convert low-cardinality string columns to category dtype
+    categorical_cols = ["ZONE", "STATE", "CITY", "MAIN CATEGORY", "SEASON", "SIZE", "FIT", "BRAND", "CATEGORY"]
+    for col in categorical_cols:
+        if col in df.columns:
+            df[col] = df[col].astype("category")
+
     return df
+
+
+@st.cache_data(show_spinner=True)
+def cached_load_brand_data(brand: str):
+    return load_brand_data(brand)
 
 
 def load_data():
@@ -78,7 +100,7 @@ def load_data():
 
             killer_files = st.file_uploader(
                 "Killer",
-                type=["xlsx"],
+                type=["xlsx", "xlsb"],
                 accept_multiple_files=True,
                 key="killer_upload"
             )
@@ -86,11 +108,15 @@ def load_data():
             if killer_files:
 
                 for file in killer_files:
+                    file_ext = file.name.split(".")[-1].lower()
+                    engine = "pyxlsb" if file_ext == "xlsb" else "openpyxl"
 
-                    temp_df = pd.read_excel(
-                        file,
-                        engine="openpyxl"
-                    )
+                    with st.spinner(f"Reading and parsing {file.name}..."):
+                        temp_df = pd.read_excel(
+                            file,
+                            engine=engine,
+                            sheet_name="DATA"
+                        )
 
                     temp_df = process_data(
                         temp_df
@@ -115,7 +141,7 @@ def load_data():
 
             jrkiller_files = st.file_uploader(
                 "JR Killer",
-                type=["xlsx"],
+                type=["xlsx", "xlsb"],
                 accept_multiple_files=True,
                 key="jrkiller_upload"
             )
@@ -123,11 +149,15 @@ def load_data():
             if jrkiller_files:
 
                 for file in jrkiller_files:
+                    file_ext = file.name.split(".")[-1].lower()
+                    engine = "pyxlsb" if file_ext == "xlsb" else "openpyxl"
 
-                    temp_df = pd.read_excel(
-                        file,
-                        engine="openpyxl"
-                    )
+                    with st.spinner(f"Reading and parsing {file.name}..."):
+                        temp_df = pd.read_excel(
+                            file,
+                            engine=engine,
+                            sheet_name="DATA"
+                        )
 
                     temp_df = process_data(
                         temp_df
@@ -152,7 +182,7 @@ def load_data():
 
             pepe_files = st.file_uploader(
                 "Pepe",
-                type=["xlsx"],
+                type=["xlsx", "xlsb"],
                 accept_multiple_files=True,
                 key="pepe_upload"
             )
@@ -160,11 +190,15 @@ def load_data():
             if pepe_files:
 
                 for file in pepe_files:
+                    file_ext = file.name.split(".")[-1].lower()
+                    engine = "pyxlsb" if file_ext == "xlsb" else "openpyxl"
 
-                    temp_df = pd.read_excel(
-                        file,
-                        engine="openpyxl"
-                    )
+                    with st.spinner(f"Reading and parsing {file.name}..."):
+                        temp_df = pd.read_excel(
+                            file,
+                            engine=engine,
+                            sheet_name="DATA"
+                        )
 
                     temp_df = process_data(
                         temp_df
@@ -193,17 +227,13 @@ def load_data():
             "Pepe"
         ]
     )
+    st.session_state["selected_brand"] = selected_brand
 
-    df = load_brand_data(
+    df = load_monthly_sales(
         selected_brand
     )
 
     if df.empty:
-
-        st.warning(
-            f"No data available for {selected_brand}"
-        )
-
         return None
 
     st.sidebar.success(

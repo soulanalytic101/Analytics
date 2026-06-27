@@ -13,9 +13,13 @@ from components.kpi_cards import (
     insight_box
 )
 
-df = require_data()
+from db import load_granular_data
 
-if df is None:
+selected_brand = st.session_state.get("selected_brand", "Killer")
+cols = ["SIZE", "SHADE", "CLSNG QTY", "QTY SALE", "NAME", "NET SALE VALUE", "ZONE", "STATE", "CITY", "MAIN CATEGORY"]
+df = load_granular_data(selected_brand, cols)
+
+if df is None or df.empty:
     st.stop()
 
 df = sidebar_filters(df)
